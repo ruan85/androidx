@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composer
 import com.intellij.openapi.util.io.FileUtil
 import java.io.File
 import java.net.URLClassLoader
+import kotlin.test.assertFalse
 import org.jetbrains.kotlin.backend.common.output.OutputFile
 import org.junit.Assert.assertEquals
 import org.junit.Ignore
@@ -1097,6 +1098,110 @@ class KtxCrossModuleTests : AbstractCodegenTest(useFir = false) {
                     """
                 )
             )
+        )
+    }
+
+    @Test
+    fun testComposableFunctionProperty() {
+        compile(
+            mapOf(
+                "Base" to mapOf(
+                    "base/Base.kt" to """
+                    package base
+
+                    import androidx.compose.runtime.Composable
+
+                    open class OpenClassWithComposableVal(
+                        val content: @Composable () -> Unit
+                    )
+                    """
+                ),
+                "Main" to mapOf(
+                    "Main.kt" to """
+                    package main
+
+                    import androidx.compose.runtime.Composable
+                    import base.OpenClassWithComposableVal
+
+                    class OpenClassWithComposableValImpl(
+                        kontent: @Composable () -> Unit
+                    ): OpenClassWithComposableVal(kontent)
+
+                    @Composable
+                    fun test() {
+                        val a = OpenClassWithComposableValImpl {}
+                        a.content()
+                    }
+                    """
+                )
+            ),
+            validate = {
+                assertFalse(
+                   it.contains("setContent"),
+                   message = "Property getter was resolved to a setter name"
+                )
+                assertFalse(
+                    it.contains("Lkotlin/jvm/functions/Function0"),
+                    message = "Composable function types were not remapped"
+                )
+            },
+        )
+    }
+
+    @Test
+    fun testFunctionInterfaceReturningComposable() {
+        compile(
+            mapOf(
+                "Base" to mapOf(
+                    "base/Base.kt" to """
+                    package base
+
+                    import androidx.compose.runtime.Composable
+
+                    fun interface Base {
+                        fun getContent(b: @Composable () -> Unit): @Composable () -> Unit
+                    }
+                    """
+                ),
+                "Main" to mapOf(
+                    "Main.kt" to """
+                    package main
+
+                    import base.Base
+
+                    val funInterfaceReturnComposable = Base {
+                        it
+                    }
+
+                    fun main() {
+                       funInterfaceReturnComposable.getContent {}
+                    }
+                    """
+                )
+            ),
+            validate = {
+                val indyExpr = Regex("INVOKEDYNAMIC.*?\\[([\\w\\W]*?)]").find(it)
+                val indyParams = indyExpr?.groupValues?.first()
+
+                assertTrue(
+                    "Could not find INVOKEDYNAMIC call",
+                    indyParams != null
+                )
+                assertEquals(
+                    indyParams!!.lines().joinToString("\n") { it.trimEnd() },
+                    """
+                        INVOKEDYNAMIC getContent()Lbase/Base; [
+                              // handle kind 0x6 : INVOKESTATIC
+                              java/lang/invoke/LambdaMetafactory.metafactory(Ljava/lang/invoke/MethodHandles%Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+                              // arguments:
+                              (Lkotlin/jvm/functions/Function2;)Lkotlin/jvm/functions/Function2;,
+                              // handle kind 0x6 : INVOKESTATIC
+                              main/MainKt.funInterfaceReturnComposable%lambda%0(Lkotlin/jvm/functions/Function2;)Lkotlin/jvm/functions/Function2;,
+                              (Lkotlin/jvm/functions/Function2;)Lkotlin/jvm/functions/Function2;
+                            ]
+                    """.trimIndent()
+                )
+            },
         )
     }
 
