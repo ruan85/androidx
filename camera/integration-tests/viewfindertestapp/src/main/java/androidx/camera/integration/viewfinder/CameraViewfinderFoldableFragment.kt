@@ -301,7 +301,7 @@ class CameraViewfinderFoldableFragment : Fragment(), View.OnClickListener {
                             "camera id cannot be null"
                         })
                         .get<Int>(CameraCharacteristics.LENS_FACING)
-                    if (Objects.equal(currentFacing, facing)) {
+                    if (Objects.equal(currentFacing as Any, facing as Any)) {
                         continue
                     }
                 }

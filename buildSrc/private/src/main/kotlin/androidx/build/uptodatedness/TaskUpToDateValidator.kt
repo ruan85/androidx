@@ -130,7 +130,12 @@ val ALLOW_RERUNNING_TASKS =
         ":wear:tiles:tiles-proto:extractIncludeTestProto",
 
         // https://youtrack.jetbrains.com/issue/KT-61931
-        "checkKotlinGradlePluginConfigurationErrors"
+        "checkKotlinGradlePluginConfigurationErrors",
+
+        // https://youtrack.jetbrains.com/issue/KT-63634
+        ":viewpager2:viewpager2:compileDebugAndroidTestKotlin",
+        "compileTestKotlinDesktop",
+        ":internal-testutils-paparazzi:compileTestKotlin",
     )
 
 // Additional tasks that are expected to be temporarily out-of-date after running once
