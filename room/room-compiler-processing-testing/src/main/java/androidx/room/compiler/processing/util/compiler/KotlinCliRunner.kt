@@ -27,6 +27,7 @@ import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.JvmDefaultMode
 import org.jetbrains.kotlin.config.JvmTarget
+import org.jetbrains.kotlin.config.LanguageVersion
 
 /**
  * Utility object to run kotlin compiler via its CLI API.
@@ -40,6 +41,9 @@ internal object KotlinCliRunner {
         .distinct()
 
     private fun CompilationStepArguments.copyToCliArguments(cliArguments: K2JVMCompilerArguments) {
+        // TODO(b/314151707): Support language version >= 2.0 by migrating to KAPT4, otherwise KAPT3
+        // is disabled when K2 and FIR is enabled by default on language version >= 2.0
+        cliArguments.languageVersion = LanguageVersion.KOTLIN_1_9.versionString
         // stdlib is in the classpath so no need to specify it here.
         cliArguments.noStdlib = true
         cliArguments.noReflect = true

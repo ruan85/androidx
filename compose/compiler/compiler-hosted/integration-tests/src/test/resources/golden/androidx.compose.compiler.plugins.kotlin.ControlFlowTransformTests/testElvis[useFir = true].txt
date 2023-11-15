@@ -29,13 +29,13 @@ fun Example(x: Int?, %composer: Composer?, %changed: Int) {
     traceEventStart(<>, %changed, -1, <>)
   }
   val y = <block>{
-    val <elvis> = x
+    val tmp0_elvis_lhs = x
     val tmp0_group = when {
-      <elvis> == null -> {
+      tmp0_elvis_lhs == null -> {
         R(%composer, 0)
       }
       else -> {
-        <elvis>
+        tmp0_elvis_lhs
       }
     }
     tmp0_group
