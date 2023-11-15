@@ -36,7 +36,6 @@ tasks.withType(KotlinCompile).configureEach {
     kotlinOptions {
         jvmTarget = "17"
         freeCompilerArgs += [
-                "-Werror",
                 "-Xskip-metadata-version-check"
         ]
         languageVersion = "1.8"

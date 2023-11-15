@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.backend.common.ClassLoweringPass
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.jvm.ir.isInlineClassType
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
+import org.jetbrains.kotlin.ir.IrImplementationDetail
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.declarations.IrClass
@@ -178,7 +179,10 @@ class ClassStabilityTransformer(
         }
 
         if (useK2) {
-            context.annotationsRegistrar.addMetadataVisibleAnnotationsToElement(cls, annotation)
+            context.metadataDeclarationRegistrar.addMetadataVisibleAnnotationsToElement(
+                cls,
+                annotation,
+            )
         } else {
             cls.annotations += annotation
         }
@@ -187,6 +191,7 @@ class ClassStabilityTransformer(
         return result
     }
 
+    @OptIn(IrImplementationDetail::class)
     private fun IrClass.addStabilityMarkerField(stabilityExpression: IrExpression) {
         val stabilityField = makeStabilityField().apply {
             parent = this@addStabilityMarkerField

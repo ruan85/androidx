@@ -22,12 +22,12 @@ import androidx.room.compiler.processing.util.compiler.TestKapt3Registrar
 import androidx.room.compiler.processing.util.compiler.toSourceSet
 import java.io.File
 import javax.annotation.processing.Processor
-import org.jetbrains.kotlin.base.kapt3.AptMode
-import org.jetbrains.kotlin.base.kapt3.KaptFlag
-import org.jetbrains.kotlin.base.kapt3.KaptOptions
 import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.compiler.plugin.parseLegacyPluginOption
+import org.jetbrains.kotlin.kapt3.base.AptMode
+import org.jetbrains.kotlin.kapt3.base.KaptFlag
+import org.jetbrains.kotlin.kapt3.base.KaptOptions
 
 /**
  * Runs KAPT to run annotation processors.
