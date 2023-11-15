@@ -19,9 +19,6 @@ package androidx.room.compiler.processing.util.compiler
 
 import java.io.File
 import javax.annotation.processing.Processor
-import org.jetbrains.kotlin.base.kapt3.KaptFlag
-import org.jetbrains.kotlin.base.kapt3.KaptOptions
-import org.jetbrains.kotlin.base.kapt3.logString
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
@@ -36,11 +33,14 @@ import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithVisibility
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.extensions.StorageComponentContainerContributor
 import org.jetbrains.kotlin.kapt3.AbstractKapt3Extension
+import org.jetbrains.kotlin.kapt3.base.KaptFlag
+import org.jetbrains.kotlin.kapt3.base.KaptOptions
 import org.jetbrains.kotlin.kapt3.base.LoadedProcessors
 import org.jetbrains.kotlin.kapt3.base.incremental.DeclaredProcType
 import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
+import org.jetbrains.kotlin.kapt3.base.logString
+import org.jetbrains.kotlin.kapt3.base.util.doOpenInternalPackagesIfRequired
 import org.jetbrains.kotlin.kapt3.util.MessageCollectorBackedKaptLogger
-import org.jetbrains.kotlin.kapt3.util.doOpenInternalPackagesIfRequired
 import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.platform.jvm.isJvm
 import org.jetbrains.kotlin.resolve.jvm.ReplaceWithSupertypeAnonymousTypeTransformer

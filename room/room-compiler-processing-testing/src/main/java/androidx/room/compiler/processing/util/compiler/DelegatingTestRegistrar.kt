@@ -49,6 +49,10 @@ internal class DelegatingTestRegistrar :
         }
     }
 
+    // FirKotlinToJvmBytecodeCompiler throws an error when it sees an incompatible plugin.
+    override val supportsK2: Boolean
+        get() = true
+
     companion object {
         private const val REGISTRAR_CLASSPATH =
             "META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar"

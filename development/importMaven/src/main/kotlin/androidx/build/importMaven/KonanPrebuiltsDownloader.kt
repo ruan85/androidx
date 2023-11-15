@@ -61,8 +61,7 @@ class KonanPrebuiltsDownloader(
         project.initializeKotlin()
 
         val compiler = NativeCompilerDownloader(
-            project = project,
-            compilerVersion = compilerVersion
+            project = project
         )
         // make sure we have the local compiler downloaded so we can find the konan.properties
         compiler.downloadIfNeeded()
