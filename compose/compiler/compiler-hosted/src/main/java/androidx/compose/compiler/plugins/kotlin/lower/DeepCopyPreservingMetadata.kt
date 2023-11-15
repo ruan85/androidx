@@ -31,8 +31,7 @@ import org.jetbrains.kotlin.ir.util.TypeRemapper
 internal open class DeepCopyPreservingMetadata(
     symbolRemapper: SymbolRemapper,
     typeRemapper: TypeRemapper,
-    symbolRenamer: SymbolRenamer
-) : DeepCopyIrTreeWithSymbols(symbolRemapper, typeRemapper, symbolRenamer) {
+) : DeepCopyIrTreeWithSymbols(symbolRemapper, typeRemapper) {
     override fun visitFile(declaration: IrFile): IrFile =
         super.visitFile(declaration).apply {
             metadata = declaration.metadata

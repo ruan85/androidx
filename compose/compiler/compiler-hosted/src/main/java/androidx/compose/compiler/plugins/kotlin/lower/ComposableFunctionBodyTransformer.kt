@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:OptIn(UnsafeDuringIrConstructionAPI::class)
+
 package androidx.compose.compiler.plugins.kotlin.lower
 
 import androidx.compose.compiler.plugins.kotlin.ComposeCallableIds
@@ -42,6 +44,7 @@ import org.jetbrains.kotlin.backend.jvm.JvmLoweredDeclarationOrigin
 import org.jetbrains.kotlin.backend.jvm.ir.isInlineClassType
 import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.IrImplementationDetail
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
@@ -108,6 +111,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrVarargImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrWhenImpl
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrReturnTargetSymbol
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.symbols.impl.IrVariableSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
@@ -144,6 +148,7 @@ import org.jetbrains.kotlin.name.SpecialNames
 import org.jetbrains.kotlin.platform.isJs
 import org.jetbrains.kotlin.platform.jvm.isJvm
 import org.jetbrains.kotlin.util.OperatorNameConventions
+import org.jetbrains.kotlin.utils.IDEAPluginsCompatibilityAPI
 
 /**
  * An enum of the different "states" a parameter of a composable function can have relating to
@@ -800,6 +805,7 @@ class ComposableFunctionBodyTransformer(
     // 2. can have default parameters, so needs to add the defaults preamble if defaults present
     // 3. never elides groups around control flow structures in the body
     // If the function has `ExplicitGroupsComposable` annotation, groups or markers should be added.
+    @OptIn(IrImplementationDetail::class, IDEAPluginsCompatibilityAPI::class)
     private fun visitNonRestartableComposableFunction(
         declaration: IrFunction,
         scope: Scope.FunctionScope,
@@ -870,37 +876,37 @@ class ComposableFunctionBodyTransformer(
             scope.realizeCoalescableGroup()
         }
 
-        declaration.body = IrBlockBodyImpl(
-            body.startOffset,
-            body.endOffset,
-            listOfNotNull(
-                when {
-                    outerGroupRequired ->
-                        irStartReplaceGroup(
-                            body,
-                            scope,
-                            irFunctionSourceKey()
-                        )
-                    collectSourceInformation && !hasExplicitGroups ->
-                        irSourceInformationMarkerStart(
-                            body,
-                            scope,
-                            irFunctionSourceKey()
-                        )
-                    else -> null
-                },
-                *scope.markerPreamble.statements.toTypedArray(),
-                *bodyPreamble.statements.toTypedArray(),
-                *transformed.statements.toTypedArray(),
-                when {
-                    outerGroupRequired -> irEndReplaceGroup(scope = scope)
-                    collectSourceInformation && !hasExplicitGroups ->
-                        irSourceInformationMarkerEnd(body, scope)
-                    else -> null
-                },
-                returnVar?.let { irReturnVar(declaration.symbol, it) }
+        declaration.body = context.irFactory.createBlockBody(body.startOffset, body.endOffset).apply {
+            this.statements.addAll(
+                listOfNotNull(
+                    when {
+                        outerGroupRequired ->
+                            irStartReplaceGroup(
+                                body,
+                                scope,
+                                irFunctionSourceKey()
+                            )
+                        collectSourceInformation && !hasExplicitGroups ->
+                            irSourceInformationMarkerStart(
+                                body,
+                                scope,
+                                irFunctionSourceKey()
+                            )
+                        else -> null
+                    },
+                    *scope.markerPreamble.statements.toTypedArray(),
+                    *bodyPreamble.statements.toTypedArray(),
+                    *transformed.statements.toTypedArray(),
+                    when {
+                        outerGroupRequired -> irEndReplaceGroup(scope = scope)
+                        collectSourceInformation && !hasExplicitGroups ->
+                            irSourceInformationMarkerEnd(body, scope)
+                        else -> null
+                    },
+                    returnVar?.let { irReturnVar(declaration.symbol, it) }
+                )
             )
-        )
+        }
         if (!outerGroupRequired && !hasExplicitGroups) {
             scope.realizeEndCalls {
                 irComposite(
@@ -934,6 +940,7 @@ class ComposableFunctionBodyTransformer(
     // 2. cannot have default parameters, so have no default handling
     // 3. they cannot be skipped since we do not know their capture scope, so no skipping logic
     // 4. proper groups around control flow structures in the body
+    @OptIn(IrImplementationDetail::class, IDEAPluginsCompatibilityAPI::class)
     private fun visitComposableLambda(
         declaration: IrFunction,
         scope: Scope.FunctionScope,
@@ -1056,33 +1063,33 @@ class ComposableFunctionBodyTransformer(
                 endOffset = body.endOffset
             )
             scope.realizeCoalescableGroup()
-            declaration.body = IrBlockBodyImpl(
-                body.startOffset,
-                body.endOffset,
-                listOfNotNull(
-                    *sourceInformationPreamble.statements.toTypedArray(),
-                    *scope.markerPreamble.statements.toTypedArray(),
-                    *skipPreamble.statements.toTypedArray(),
-                    *bodyPreamble.statements.toTypedArray(),
-                    transformedBody,
-                    returnVar?.let { irReturnVar(declaration.symbol, it) }
+            declaration.body = context.irFactory.createBlockBody(body.startOffset, body.endOffset).apply {
+                this.statements.addAll(
+                    listOfNotNull(
+                        *sourceInformationPreamble.statements.toTypedArray(),
+                        *scope.markerPreamble.statements.toTypedArray(),
+                        *skipPreamble.statements.toTypedArray(),
+                        *bodyPreamble.statements.toTypedArray(),
+                        transformedBody,
+                        returnVar?.let { irReturnVar(declaration.symbol, it) }
+                    )
                 )
-            )
+            }
         } else {
             scope.realizeCoalescableGroup()
-            declaration.body = IrBlockBodyImpl(
-                body.startOffset,
-                body.endOffset,
-                listOfNotNull(
-                    *scope.markerPreamble.statements.toTypedArray(),
-                    *sourceInformationPreamble.statements.toTypedArray(),
-                    *skipPreamble.statements.toTypedArray(),
-                    *bodyPreamble.statements.toTypedArray(),
-                    transformed,
-                    *bodyEpilogue.statements.toTypedArray(),
-                    returnVar?.let { irReturnVar(declaration.symbol, it) }
+            declaration.body = context.irFactory.createBlockBody(body.startOffset, body.endOffset).apply {
+                this.statements.addAll(
+                    listOfNotNull(
+                        *scope.markerPreamble.statements.toTypedArray(),
+                        *sourceInformationPreamble.statements.toTypedArray(),
+                        *skipPreamble.statements.toTypedArray(),
+                        *bodyPreamble.statements.toTypedArray(),
+                        transformed,
+                        *bodyEpilogue.statements.toTypedArray(),
+                        returnVar?.let { irReturnVar(declaration.symbol, it) }
+                    )
                 )
-            )
+            }
         }
         scope.metrics.recordFunction(
             composable = true,
@@ -1107,6 +1114,7 @@ class ComposableFunctionBodyTransformer(
     // 3. generate handling of default parameters if necessary
     // 4. generate skipping logic based on parameters passed into the function
     // 5. generate groups around control flow structures in the body
+    @OptIn(IrImplementationDetail::class, IDEAPluginsCompatibilityAPI::class)
     private fun visitRestartableComposableFunction(
         declaration: IrFunction,
         scope: Scope.FunctionScope,
@@ -1253,22 +1261,22 @@ class ComposableFunctionBodyTransformer(
 
         scope.realizeGroup(endWithTraceEventEnd)
 
-        declaration.body = IrBlockBodyImpl(
-            body.startOffset,
-            body.endOffset,
-            listOfNotNull(
-                irStartRestartGroup(
-                    body,
-                    scope,
-                    irFunctionSourceKey()
-                ),
-                *scope.markerPreamble.statements.toTypedArray(),
-                *skipPreamble.statements.toTypedArray(),
-                transformedBody,
-                if (returnVar == null) end() else null,
-                returnVar?.let { irReturnVar(declaration.symbol, it) }
+        declaration.body = context.irFactory.createBlockBody(body.startOffset, body.endOffset).apply {
+            this.statements.addAll(
+                listOfNotNull(
+                    irStartRestartGroup(
+                        body,
+                        scope,
+                        irFunctionSourceKey()
+                    ),
+                    *scope.markerPreamble.statements.toTypedArray(),
+                    *skipPreamble.statements.toTypedArray(),
+                    transformedBody,
+                    if (returnVar == null) end() else null,
+                    returnVar?.let { irReturnVar(declaration.symbol, it) }
+                )
             )
-        )
+        }
         scope.metrics.recordFunction(
             composable = true,
             restartable = true,

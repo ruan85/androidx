@@ -61,8 +61,7 @@ class KonanPrebuiltsDownloader(
         project.initializeKotlin()
 
         val compiler = NativeCompilerDownloader(
-            project = project,
-            compilerVersion = compilerVersion
+            project = project
         )
         // make sure we have the local compiler downloaded so we can find the konan.properties
         compiler.downloadIfNeeded()
@@ -105,10 +104,8 @@ class KonanPrebuiltsDownloader(
             }
             val platformName = "$osName-$archName"
             val subPath = listOf(
-                "releases",
                 compilerVersion,
-                platformName,
-                "kotlin-native-prebuilt-$platformName-$compilerVersion.tar.gz"
+                "kotlin-native-prebuilt-$compilerVersion-$platformName.tar.gz"
             ).joinToString("/")
             val url = listOf(
                 NATIVE_COMPILERS_BASE_URL,
@@ -276,8 +273,9 @@ class KonanPrebuiltsDownloader(
     }
 
     companion object {
-        private const val REPO_BASE_URL = "https://download.jetbrains.com/kotlin/native"
-        private const val NATIVE_COMPILERS_BASE_URL = "$REPO_BASE_URL/builds"
+        private const val REPO_BASE_URL = "https://repo.maven.apache.org"
+        private const val NATIVE_COMPILERS_BASE_URL =
+            "$REPO_BASE_URL/maven2/org/jetbrains/kotlin/kotlin-native-prebuilt"
 
         private val SUPPORTED_HOST_NAMES = SUPPORTED_HOSTS.map { it.name }
 

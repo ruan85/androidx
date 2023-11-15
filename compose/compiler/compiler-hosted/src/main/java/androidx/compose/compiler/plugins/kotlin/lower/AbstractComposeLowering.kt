@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:OptIn(UnsafeDuringIrConstructionAPI::class)
+
 package androidx.compose.compiler.plugins.kotlin.lower
 
 import androidx.compose.compiler.plugins.kotlin.ComposeCallableIds
@@ -57,7 +59,7 @@ import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.declarations.IrValueDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.declarations.IrVariable
-import org.jetbrains.kotlin.ir.declarations.impl.IrExternalPackageFragmentImpl
+import org.jetbrains.kotlin.ir.declarations.createEmptyExternalPackageFragment
 import org.jetbrains.kotlin.ir.declarations.impl.IrVariableImpl
 import org.jetbrains.kotlin.ir.declarations.inlineClassRepresentation
 import org.jetbrains.kotlin.ir.declarations.name
@@ -99,6 +101,7 @@ import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrReturnTargetSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrValueSymbol
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.symbols.impl.IrVariableSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
@@ -1006,11 +1009,29 @@ abstract class AbstractComposeLowering(
         return false
     }
 
+    private fun IrStatementOrigin?.isGetProperty() = this == IrStatementOrigin.GET_PROPERTY
+    private fun IrStatementOrigin?.isSpecialCaseMathOp() =
+        this in setOf(
+            IrStatementOrigin.PLUS,
+            IrStatementOrigin.MUL,
+            IrStatementOrigin.MINUS,
+            IrStatementOrigin.ANDAND,
+            IrStatementOrigin.OROR,
+            IrStatementOrigin.DIV,
+            IrStatementOrigin.EQ,
+            IrStatementOrigin.EQEQ,
+            IrStatementOrigin.EQEQEQ,
+            IrStatementOrigin.GT,
+            IrStatementOrigin.GTEQ,
+            IrStatementOrigin.LT,
+            IrStatementOrigin.LTEQ
+        )
+
     private fun IrCall.isStatic(): Boolean {
         val function = symbol.owner
         val fqName = function.kotlinFqName
-        return when (origin) {
-            is IrStatementOrigin.GET_PROPERTY -> {
+        return when {
+            origin.isGetProperty() -> {
                 // If we are in a GET_PROPERTY call, then this should usually resolve to
                 // non-null, but in case it doesn't, just return false
                 val prop = (function as? IrSimpleFunction)
@@ -1049,19 +1070,7 @@ abstract class AbstractComposeLowering(
                 false
             }
 
-            is IrStatementOrigin.PLUS,
-            is IrStatementOrigin.MUL,
-            is IrStatementOrigin.MINUS,
-            is IrStatementOrigin.ANDAND,
-            is IrStatementOrigin.OROR,
-            is IrStatementOrigin.DIV,
-            is IrStatementOrigin.EQ,
-            is IrStatementOrigin.EQEQ,
-            is IrStatementOrigin.EQEQEQ,
-            is IrStatementOrigin.GT,
-            is IrStatementOrigin.GTEQ,
-            is IrStatementOrigin.LT,
-            is IrStatementOrigin.LTEQ -> {
+            origin.isSpecialCaseMathOp() -> {
                 // special case mathematical operators that are in the stdlib. These are
                 // immutable operations so the overall result is static if the operands are
                 // also static
@@ -1078,7 +1087,7 @@ abstract class AbstractComposeLowering(
                 getArgumentsWithIr().all { it.second.isStatic() }
             }
 
-            null -> {
+            origin == null -> {
                 if (fqName == ComposeFqNames.remember) {
                     // if it is a call to remember with 0 input arguments, then we can
                     // consider the value static if the result type of the lambda is stable
@@ -1179,7 +1188,7 @@ abstract class AbstractComposeLowering(
                 name = Name.special("<unsafe-coerce>")
                 origin = IrDeclarationOrigin.IR_BUILTINS_STUB
             }.apply {
-                parent = IrExternalPackageFragmentImpl.createEmptyExternalPackageFragment(
+                parent = createEmptyExternalPackageFragment(
                     context.moduleDescriptor,
                     FqName("kotlin.jvm.internal")
                 )

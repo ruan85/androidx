@@ -28,18 +28,6 @@ import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
 import org.jetbrains.kotlin.resolve.diagnostics.DiagnosticSuppressor
 
 open class ComposeDiagnosticSuppressor : DiagnosticSuppressor {
-
-    companion object {
-        fun registerExtension(
-            project: Project,
-            extension: DiagnosticSuppressor
-        ) {
-            @Suppress("DEPRECATION")
-            Extensions.getRootArea().getExtensionPoint(DiagnosticSuppressor.EP_NAME)
-                .registerExtension(extension, project)
-        }
-    }
-
     override fun isSuppressed(diagnostic: Diagnostic): Boolean {
         return isSuppressed(diagnostic, null)
     }
