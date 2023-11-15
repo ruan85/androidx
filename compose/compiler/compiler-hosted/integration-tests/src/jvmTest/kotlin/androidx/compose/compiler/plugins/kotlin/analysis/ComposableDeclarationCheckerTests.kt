@@ -64,7 +64,7 @@ class ComposableDeclarationCheckerTests(useFir: Boolean) : AbstractComposeDiagno
             fun doSomething(fn: () -> Unit) { print(fn) }
             @Composable fun B(content: @Composable () -> Unit) {
                 content()
-                doSomething(::<!UNRESOLVED_REFERENCE!>A<!>)
+                doSomething(::<!INAPPLICABLE_CANDIDATE!>A<!>)
                 B(<!COMPOSABLE_FUNCTION_REFERENCE!>::A<!>)
             }
         """
@@ -411,7 +411,7 @@ class ComposableDeclarationCheckerTests(useFir: Boolean) : AbstractComposeDiagno
             """
                 import androidx.compose.runtime.Composable
 
-                class Impl : () -> Unit, @Composable (Int) -> Unit {
+                class Impl : ${if (useFir) "<!MIXING_FUNCTIONAL_KINDS_IN_SUPERTYPES!>" else ""}() -> Unit, @Composable (Int) -> Unit${if (useFir) "<!>" else ""} {
                     <!CONFLICTING_OVERLOADS!>@Composable override fun invoke()<!> {}
                     @Composable override fun invoke(p0: Int) {}
                 }
