@@ -67,6 +67,13 @@ tasks.withType(PluginUnderTestMetadata.class).named("pluginUnderTestMetadata").c
     it.pluginClasspath.from(configurations.testPlugin)
 }
 
+tasks.withType(Test).configureEach { test ->
+    test.javaLauncher = javaToolchains.launcherFor {
+        // Required to test on JDK 17 because AGP 8.2.1 is required for JDK 21
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 // Configure publishing tasks to be dependencies of 'test' so those artifacts are available for
 // the test project executed with Gradle Test Kit.
 tasks.findByPath("test").dependsOn(

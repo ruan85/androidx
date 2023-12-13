@@ -77,7 +77,10 @@ internal fun List<String>.requireInOrder(
     var remaining = toFind.filter { it.isNotBlank() }.toMutableList()
     for (line in this) {
         val next = remaining.firstOrNull() ?: return emptyList()
-        if (predicate(line, next)) remaining.removeFirst()
+        // Unable to use remaining.removeFirst() from kotlin-stdlib because
+        // JDK 21 introduce Collection#removeFirst and thus kotlinc prefers
+        // using that function, but we target Java 17 that does not have it.
+        if (predicate(line, next)) remaining.removeAt(0)
     }
     return remaining
 }
