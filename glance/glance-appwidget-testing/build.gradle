@@ -46,7 +46,7 @@ dependencies {
     testImplementation(libs.testRunner)
     testImplementation(libs.truth)
 
-    samples(projectOrArtifact(":glance:glance-appwidget-testing:glance-appwidget-testing-samples"))
+    samples(project(":glance:glance-appwidget-testing:glance-appwidget-testing-samples"))
 }
 
 android {

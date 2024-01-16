@@ -45,6 +45,13 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
     /** List of projects that were requested in the settings.gradle file */
     private lateinit var primaryProjectPaths: Set<String>
 
+    /**
+     * List of projects that can be depended on using projectOrArtifact.
+     * It is set by the playground settings plugin, similar to [primaryProjectPaths] to ensure
+     * we limit its usages into absolutely necessary cases.
+     * */
+    private lateinit var projectOrArtifactAllowList: Set<String>
+
     override fun apply(target: Project) {
         if (!target.isRoot) {
             throw GradleException("This plugin should only be applied to root project")
@@ -62,6 +69,9 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
         PlaygroundCIHostTestsTask.register(rootProject)
         primaryProjectPaths = target.extensions.extraProperties
             .get("primaryProjects").toString().split(",")
+            .toSet()
+        projectOrArtifactAllowList = target.extensions.extraProperties
+            .get("projectOrArtifactAllowList").toString().split(",")
             .toSet()
         rootProject.subprojects { configureSubProject(it) }
     }
@@ -195,8 +205,8 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
 
             private fun Project.requireProperty(name: String): String {
                 return checkNotNull(findProperty(name)) {
-                        "missing $name property. It must be defined in the gradle.properties file"
-                    }
+                    "missing $name property. It must be defined in the gradle.properties file"
+                }
                     .toString()
             }
         }
@@ -217,6 +227,15 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
             if (requested != null) {
                 return requested
             } else {
+                val plugin = rootProject.plugins.getPlugin(AndroidXPlaygroundRootImplPlugin::class.java)
+                if (path !in plugin.projectOrArtifactAllowList) {
+                    error("""
+                        $path is not in the allow list for usages of projectOrArtifact.
+                        This usually means you should be using project instead but if that is not possible,
+                        you can modify the allow-list in the PlaygroundExtension.kt class.
+                        Currently allowed projects: ${plugin.projectOrArtifactAllowList}
+                    """.trimIndent())
+                }
                 val sections = path.split(":")
 
                 if (sections[0].isNotEmpty()) {

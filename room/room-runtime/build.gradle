@@ -90,7 +90,7 @@ androidXMultiplatform {
                 api(libs.kotlinStdlib)
                 api(project(":room:room-common"))
                 api(project(":sqlite:sqlite"))
-                api(projectOrArtifact(":annotation:annotation"))
+                api(project(":annotation:annotation"))
                 api(libs.kotlinCoroutinesCore)
                 implementation(libs.atomicFu)
             }
@@ -121,7 +121,7 @@ androidXMultiplatform {
                 compileOnly("androidx.collection:collection:1.2.0")
                 compileOnly("androidx.lifecycle:lifecycle-livedata-core:2.0.0")
                 compileOnly("androidx.paging:paging-common:2.0.0")
-                implementation(projectOrArtifact(":annotation:annotation-experimental"))
+                implementation(project(":annotation:annotation-experimental"))
             }
         }
         androidUnitTest {

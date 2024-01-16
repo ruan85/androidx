@@ -65,6 +65,12 @@ class ProjectDependencyGraph {
         projectReferences[projectPath] = parsedDependencies
     }
 
+    Set<String> findProjectsWithPrefix(String pathPrefix) {
+        return allProjects.keySet().findAll {
+            it.startsWith(pathPrefix)
+        }
+    }
+
     /**
      * Returns a list of (projectPath -> projectDir) tuples that include the given filteredProjects
      * and all of their dependencies (including nested dependencies)

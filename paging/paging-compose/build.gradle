@@ -53,16 +53,16 @@ androidXMultiplatform {
 
         commonTest {
             dependencies {
-                implementation projectOrArtifact(":compose:ui:ui-tooling")
+                implementation project(":compose:ui:ui-tooling")
                 implementation(project(":compose:test-utils"))
-                implementation(projectOrArtifact(":internal-testutils-paging"))
+                implementation(project(":internal-testutils-paging"))
             }
         }
 
         jvmTest {
             dependsOn(commonTest)
             dependencies {
-                implementation(projectOrArtifact(":compose:ui:ui-test-junit4"))
+                implementation(project(":compose:ui:ui-test-junit4"))
             }
         }
 
@@ -78,7 +78,7 @@ androidXMultiplatform {
 }
 
 dependencies {
-    samples(projectOrArtifact(":paging:paging-compose:paging-compose-samples"))
+    samples(project(":paging:paging-compose:paging-compose-samples"))
 }
 
 androidx {

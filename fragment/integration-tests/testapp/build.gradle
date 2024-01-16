@@ -27,7 +27,7 @@ android {
 dependencies {
     implementation(libs.kotlinStdlib)
     implementation(project(":fragment:fragment-ktx"))
-    implementation(projectOrArtifact(":transition:transition"))
+    implementation(project(":transition:transition"))
     implementation("androidx.recyclerview:recyclerview:1.1.0")
     debugImplementation(project(":fragment:fragment-testing-manifest"))
 

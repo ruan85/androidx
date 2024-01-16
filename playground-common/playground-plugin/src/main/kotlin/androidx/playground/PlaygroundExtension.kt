@@ -156,6 +156,11 @@ open class PlaygroundExtension @Inject constructor(
         val unsupportedProjects = allNeededProjects.map { it.v1 }.toSet().filter {
             it in UNSUPPORTED_PROJECTS
         }
+        val projectOrArtifactAllowList = mutableSetOf<String>()
+        projectOrArtifactAllowList.addAll(UNSUPPORTED_PROJECTS)
+        PROJECT_OR_ARTIFACT_ALLOWED_GROUP_PREFIXES.forEach {
+            projectOrArtifactAllowList.addAll(projectDependencyGraph.findProjectsWithPrefix(it))
+        }
         if (unsupportedProjects.isNotEmpty()) {
             val errorMsg = buildString {
                 appendLine(
@@ -182,6 +187,8 @@ open class PlaygroundExtension @Inject constructor(
             if (project.isRoot) {
                 project.extensions.extraProperties["primaryProjects"] =
                     selectedGradlePaths.joinToString(",")
+                project.extensions.extraProperties["projectOrArtifactAllowList"] =
+                    projectOrArtifactAllowList.joinToString(",")
             }
         }
         allNeededProjects.forEach {
@@ -195,6 +202,14 @@ open class PlaygroundExtension @Inject constructor(
             ":benchmark:benchmark-common", // requires prebuilts
             ":core:core", // stable aidl, b/270593834
             ":sqlite:sqlite-bundled", // clang compilation, b/306669673
+        )
+        // regex: projectOrArtifact\(":(?!core|benchmark)([^"]+)
+        // replace: project("$1
+        private val PROJECT_OR_ARTIFACT_ALLOWED_GROUP_PREFIXES = setOf(
+            ":core",
+            ":sqlite",
+            ":benchmark",
+            ":room"
         )
     }
 }

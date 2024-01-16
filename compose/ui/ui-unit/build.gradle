@@ -111,7 +111,7 @@ androidXMultiplatform {
 }
 
 dependencies {
-    samples(projectOrArtifact(":compose:ui:ui-unit:ui-unit-samples"))
+    samples(project(":compose:ui:ui-unit:ui-unit-samples"))
 }
 
 androidx {
