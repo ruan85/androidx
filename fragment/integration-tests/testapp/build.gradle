@@ -36,6 +36,8 @@ dependencies {
     androidTestImplementation(libs.testRunner)
     androidTestImplementation(libs.truth)
     androidTestImplementation(libs.espressoCore)
+    // to align dependencies with 'debugRuntimeClasspath'
+    androidTestImplementation(project(":annotation:annotation-experimental"))
 }
 
 tasks["check"].dependsOn(tasks["connectedCheck"])
