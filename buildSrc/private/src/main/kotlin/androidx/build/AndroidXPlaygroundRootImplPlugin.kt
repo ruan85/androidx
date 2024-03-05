@@ -58,7 +58,6 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
         config = PlaygroundProperties.load(rootProject)
         repos = PlaygroundRepositories(config)
         rootProject.repositories.addPlaygroundRepositories()
-        GradleTransformWorkaround.maybeApply(rootProject)
         PlaygroundCIHostTestsTask.register(rootProject)
         primaryProjectPaths = target.extensions.extraProperties
             .get("primaryProjects").toString().split(",")
